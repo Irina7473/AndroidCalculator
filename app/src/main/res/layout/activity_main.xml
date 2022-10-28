@@ -27,6 +27,14 @@
                 android:orientation="vertical"
                 android:layout_span="4">
                 <TextView
+                    android:id="@+id/comment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:textAlignment="textEnd"
+                    android:textColor="@color/black"
+                    android:textSize="30sp" />
+                <TextView
                     android:id="@+id/actions"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -34,7 +42,6 @@
                     android:textAlignment="textEnd"
                     android:textColor="@color/black"
                     android:textSize="30sp" />
-
                 <TextView
                     android:id="@+id/result"
                     android:layout_width="match_parent"

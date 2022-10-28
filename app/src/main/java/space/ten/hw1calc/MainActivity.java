@@ -8,97 +8,121 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView actions, result;
+    TextView actions, result, comment;
     Button button;
-    String inputLine="", operation="", lastOperation = "=";
+    String inputLine="", operation="";
+    String lastChar="", lastOperation="=";
     Double operand1 = null, operand2 = null;
+    Boolean flag=true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        comment = (TextView)findViewById(R.id.comment);
         actions = (TextView)findViewById(R.id.actions);
         result = (TextView)findViewById(R.id.result);
     }
 
     public void onNumberClick(View view){
+        comment.setText("");
         button = (Button)view;
-        inputLine +=button.getText(); //Получаю строку для числа
-        actions.append(button.getText());  //Добавляю значение на экран
-        //Обнуляю предыдущий результат
-        if(lastOperation.equals("=") && operand1 == null){
-            result.setText(" ");
+        if (lastChar.equals(".") && button.getText().equals(".")) return;
+        //Обнуляю результат при вводе цифры после =
+        if(lastOperation.equals("=")){
+            operand1 = null;
+            actions.setText("");
+            lastOperation="";
         }
+        inputLine += button.getText(); //Получаю строку для числа
+        actions.append(button.getText());  //Добавляю значение на экран
+        lastChar = button.getText().toString();
+        flag=true;
     }
 
-    public void onOperationClick(View view){
-        button = (Button)view;
+    public void onOperationClick(View view) {
+        if (!flag) return;
+        comment.setText("");
+        button = (Button) view;
         operation = button.getText().toString();
-        if(operation.equals("C")){
+
+        if (operation.equals("C")) {
             //Очищаю все
-            inputLine="";
-            operation="";
+            inputLine = "";
+            operation = "";
             lastOperation = "=";
             operand1 = null;
             operand2 = null;
             actions.setText("");
             result.setText("");
         }
-        else if(operation.equals("~")){
+        else if (operation.equals("~")) {
             // Стирание последнего введенного знака
-            inputLine = inputLine.substring(0, inputLine.length()-1);
-            String actionsLine = actions.getText().toString();
-            actions.setText(actionsLine.substring(0, actionsLine.length()-1));
-        }
-        //Если есть строка для преобразования в число
-        else if (inputLine.length() > 0){
-            actions.append(button.getText()); //Добавляю значение на экран
-            if(operation.equals(".")){
-                return;
+            if (inputLine.length() > 0) {
+                inputLine = inputLine.substring(0, inputLine.length() - 1);
+                removChar(1);
             }
+            else if (lastOperation.equals("=") || lastOperation.equals("")) return;
             else {
-                if (operand1==null) {
+                lastOperation="=";
+                removChar(1);
+            }
+        }
+        else {
+            //Если есть строка для преобразования в число
+            if (inputLine.length() > 0) {
+                actions.append(button.getText()); //Добавляю значение на экран
+                if (operand1 == null) {
                     //Получаю 1-е число и вывожу его в результат
                     operand1 = Double.valueOf(inputLine);
-                    if(operation.equals("+/-")) operand1 *= -1; //Меняю знак
+                    if (operation.equals("+/-")) {
+                        operand1 *= -1; //Меняю знак
+
+                    }
                     result.setText(operand1.toString());
-                }
-                else {
+                } else {
                     try {
                         //Получаю 2-е число
                         operand2 = Double.valueOf(inputLine);
-                        if(operation.equals("+/-")) operand2 *= -1; //Меняю знак
-                        else{
-                        //Вызываю выполнение операции
-                        commitOperation(operand2, lastOperation);}
+                        if (operation.equals("+/-")) {
+                            operand2 *= -1; //Меняю знак
+
+                        } else {//Вызываю выполнение операции
+                            commitOperation(operand2, lastOperation);
+                        }
                     } catch (NumberFormatException ex) {
                         actions.setText("");
                     }
                 }
-                inputLine=""; //Очищаю строку для ввода числа
+                inputLine = ""; //Очищаю строку для ввода числа
+            }
+
+            //Если нет строки для преобразования, но есть 2-й операнд
+            else if (operand2 != null) {
+                actions.append(button.getText()); //Добавляю значение на экран
+                commitOperation(operand2, lastOperation); //Вызываю выполнение операции
+
+            }
+            //Если нет нет строки для преобразования и нет 2-го операнда, но есть 1-й операнд
+            else if (operand1 != null) {
+                actions.append(button.getText()); //Добавляю значение на экран
+            }
+
+            //Запоминаю последнюю операцию
+            if (!operation.equals("+/-")) {
+                lastOperation = operation;
+                flag = false;
             }
         }
-        //Если нет строки для преобразования, но есть 2-й операнд
-        else if (operand2!=null){
-            actions.append(button.getText()); //Добавляю значение на экран
-            commitOperation(operand2, lastOperation); //Вызываю выполнение операции
+        //При нажатии кнопки = обнуляю экран и оставляю результат
+        if (operation.equals("=")) {
+            actions.setText(operand1.toString());
+            result.setText("");
+            lastOperation = operation;
         }
-        //Если нет нет строки для преобразования и нет 2-го операнда, но есть 1-й операнд
-        else if (operand1!=null) {
-            actions.append(button.getText()); //Добавляю значение на экран
-        }
-        //Запоминаю последнюю операцию
-        if(!operation.equals("+/-"))lastOperation = operation;
-        //При нажатии кнопки = обнуляю экран и первое число
-        if(operation.equals("=")){
-            actions.setText("");
-            operand1=null;
-        }
-
     }
 
     private void commitOperation(Double number, String lastOperation){
-
         switch(lastOperation){
             case "+":
                 operand1 +=number;
@@ -110,7 +134,11 @@ public class MainActivity extends AppCompatActivity {
                 operand1 *=number;
                 break;
             case "/":
-                if(number==0){ operand1 =0.0; }
+                if(number==0){
+                    comment.setText("На 0 делить нельзя!");
+                    removChar(2);
+                    //flag =false;
+                }
                 else{ operand1 /=number; }
                 break;
         }
@@ -118,4 +146,15 @@ public class MainActivity extends AppCompatActivity {
         result.setText(operand1.toString());  //Вывожу результат на экран
     }
 
+    private void removChar(int amt){
+        String actionsLine = actions.getText().toString();
+        if ( actionsLine.length()>=amt) actions.setText(actionsLine.substring(0, actionsLine.length() - amt));
+    }
+
 }
+
+//TO DO
+// Несколько раз подряд смена знака
+//Несколько раз подряд знак операции
+//Деление на 0
+//После равно нельзя вводить цифры - только операции
