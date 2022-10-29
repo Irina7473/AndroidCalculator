@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
         comment.setText("");
         button = (Button)view;
         if (lastChar.equals(".") && button.getText().equals(".")) return;
+        if (lastChar.equals("+/-")) return;
         //Обнуляю результат при вводе цифры после =
         if(lastOperation.equals("=")){
             operand1 = null;
@@ -41,7 +42,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onOperationClick(View view) {
-        if (!flag) return;
         comment.setText("");
         button = (Button) view;
         operation = button.getText().toString();
@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
             operand2 = null;
             actions.setText("");
             result.setText("");
+            flag=true;
         }
         else if (operation.equals("~")) {
             // Стирание последнего введенного знака
@@ -67,8 +68,10 @@ public class MainActivity extends AppCompatActivity {
                 lastOperation="=";
                 removChar(1);
             }
+            flag=true;
         }
         else {
+            if (!flag) return;
             //Если есть строка для преобразования в число
             if (inputLine.length() > 0) {
                 actions.append(button.getText()); //Добавляю значение на экран
@@ -77,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
                     operand1 = Double.valueOf(inputLine);
                     if (operation.equals("+/-")) {
                         operand1 *= -1; //Меняю знак
-
+                        lastChar = operation;
                     }
                     result.setText(operand1.toString());
                 } else {
@@ -86,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
                         operand2 = Double.valueOf(inputLine);
                         if (operation.equals("+/-")) {
                             operand2 *= -1; //Меняю знак
-
+                            lastChar = operation;
                         } else {//Вызываю выполнение операции
                             commitOperation(operand2, lastOperation);
                         }
@@ -109,7 +112,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             //Запоминаю последнюю операцию
-            if (!operation.equals("+/-")) {
+            //не работает if
+            if (!operation.equals("+/-") ) {
                 lastOperation = operation;
                 flag = false;
             }
@@ -119,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
             actions.setText(operand1.toString());
             result.setText("");
             lastOperation = operation;
+            flag=true;
         }
     }
 
@@ -137,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
                 if(number==0){
                     comment.setText("На 0 делить нельзя!");
                     removChar(2);
-                    //flag =false;
+                    flag =false;
                 }
                 else{ operand1 /=number; }
                 break;
@@ -154,7 +159,5 @@ public class MainActivity extends AppCompatActivity {
 }
 
 //TO DO
-// Несколько раз подряд смена знака
-//Несколько раз подряд знак операции
-//Деление на 0
-//После равно нельзя вводить цифры - только операции
+// Смена знака
+//Деление на 0 - сохранить в последней операции деление на 0
